@@ -101,7 +101,7 @@ class OBD_Capture():
                         o2b2s2 REAL);""")
 
     def connect(self):
-        self.port = obd_io.OBDPort('/dev/pts/2', None, 2, 2)
+        self.port = obd_io.OBDPort('/dev/pts/3', None, 2, 2)
 
         if(self.port):
             print "Connected to " + self.port.port.name
@@ -120,24 +120,38 @@ class OBD_Capture():
     def gmeter(self):
         outputs = ['','']
         axes = self.adxl345.getAxes(True)
-        x = axes['z']
-        y = axes['y']
+        y = axes['z']
+        x = axes['y']
+
+	y = ( y - 0.408 ) / 0.9135
 
         self.gs['minx'] = min(self.gs['minx'], x)
         self.gs['maxx'] = max(self.gs['maxx'], x)
         self.gs['miny'] = min(self.gs['miny'], y)
         self.gs['maxy'] = max(self.gs['maxy'], y)
 
-        outputs[0]="{0:.2f} {1:+.2f} {2:.2f}".format(self.gs['minx'], x, self.gs['maxx'])
-        outputs[1]="{0:.2f} {1:+.2f} {2:.2f}".format(self.gs['miny'], y, self.gs['maxy'])
+        #outputs[0]="{0:.2f} {1:+.2f} {2:.2f}".format(self.gs['minx'], x, self.gs['maxx'])
+        #outputs[1]="{0:.2f} {1:+.2f} {2:.2f}".format(self.gs['miny'], y, self.gs['maxy'])
 
        	background = pygame.Surface(screen.get_size())
         background = background.convert()
         background.fill((0,0,0))
 
+	pygame.draw.circle(background, (255,255,255), (160,120), 50, 1)
+	pygame.draw.circle(background, (128,128,128), (160,120), 100, 1)
 
-        background.blit( self._rendertext("X - Gs", outputs[0], "", (255,255,255)), (0,48) )
-        background.blit( self._rendertext("Y - Gs", outputs[1], "", (255,255,255)), (160,48) )
+	pygame.draw.circle(background, (255,255,0), (int(self.gs['minx']/2.0*100)+160, 120), 3)
+	pygame.draw.circle(background, (255,255,0), (int(self.gs['maxx']/2.0*100)+160, 120), 3)
+
+	pygame.draw.circle(background, (255,255,255), ( int(  (x/2.0)*100  )+160, int(  (y/2.0)*100  )+120 ), 6)
+	pygame.draw.circle(background, (255,0,0), ( int(  (x/2.0)*100  )+160, int(  (y/2.0)*100  )+120 ), 4)
+
+
+	pygame.draw.line(background, (255,0,0), ( int(  (x/2.0)*100  )+160, int(  (y/2.0)*100  )+120 ), (160,120), 3)
+
+
+	background.blit( self._renderstring("Lat: {0:.2f}g".format(x), (255,255,255)), (5,5) )
+	background.blit( self._renderstring("Long: {0:.2f}g".format(y), (255,255,255)), (5,30) )
 
         screen.blit(background, (0, 0))
         pygame.display.flip()
@@ -317,6 +331,13 @@ class OBD_Capture():
 
         return gauge
 
+    def _renderstring(self, string, color):
+        font = pygame.font.Font(None,28)
+        text = font.render(string, 1, color )
+
+	return text
+
+
     def capture_data(self):
         cur = self.con.cursor()
         #Loop until Ctrl C is pressed
@@ -380,7 +401,7 @@ if __name__ == "__main__":
 
     displays = [ o.capture_data, o.dragtime, o.gmeter ]
 
-    curdisplay = 2
+    curdisplay = 0
 
     try:
         while True:
