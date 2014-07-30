@@ -103,8 +103,12 @@ class OBD_Capture():
     def connect(self):
         self.port = obd_io.OBDPort('/dev/pts/3', None, 2, 2)
 
-        if(self.port):
-            print "Connected to " + self.port.port.name
+	try:
+	    if(self.port):
+                print "Connected to " + self.port.port.name
+        except:
+	    pass
+
 
     def is_connected(self):
         return self.port
@@ -395,13 +399,17 @@ if __name__ == "__main__":
     o.connect()
     time.sleep(3)
 
-    if not o.is_connected():
-        print "ELM Not connected - exiting now"
-        exit(0)
+    try:
+        if not o.is_connected():
+            print "ELM Not connected - exiting now"
+            #exit(0)
+    except:
+	pass
+
 
     displays = [ o.capture_data, o.dragtime, o.gmeter ]
 
-    curdisplay = 0
+    curdisplay = 2
 
     try:
         while True:
