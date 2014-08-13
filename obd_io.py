@@ -197,6 +197,8 @@ class OBDPort:
              #debug_display(self._notify_window, 3, "Get result:" + buffer)
              if(buffer == ""):
                 return None
+	     if(buffer == "CAN ERROR"):
+		return "NODATA-CANERROR"
              return buffer
          else:
             debug_display(self._notify_window, 3, "NO self.port!")

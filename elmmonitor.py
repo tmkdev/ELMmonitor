@@ -101,7 +101,17 @@ class OBD_Capture():
                         o2b2s2 REAL);""")
 
     def connect(self):
-        self.port = obd_io.OBDPort('/dev/pts/3', None, 2, 2)
+	#self.port = obd_io.OBDPort('/dev/pts/{0}'.format(portnumber), None, 2, 2)
+	portnames = ['/dev/obd0', '/dev/obd1', '/dev/pts/2', '/dev/pts/3', 'dev/pts/1'] 
+        print portnames
+
+        for port in portnames:
+            self.port = obd_io.OBDPort(port, None, 2, 2)
+            if(self.port.State == 0):
+                self.port.close()
+                self.port = None
+            else:
+                break
 
 	try:
 	    if(self.port):
@@ -109,23 +119,32 @@ class OBD_Capture():
         except:
 	    pass
 
-
     def is_connected(self):
         return self.port
 
-    def renderoutput(self, outputs, color):
-        #self.lcd.clear()
-        self.lcd.setcolor(color)
+    def biggauge(self):
+       	background = pygame.Surface(screen.get_size())
+        background = background.convert()
+        background.fill((0,0,0))
 
-        for row in enumerate(outputs):
-            self.lcd.position( (1,row[0]+1) )
-            self.lcd.write("{0:^16}".format(row[1]))
+        font = pygame.font.Font(None,60)
+        speed = font.render("Speed:", 1, (255,255,255) )
+        value = font.render("56kph", 1, (255,255,255) )
+
+	background.blit( speed, (5,5) )
+	background.blit( value, (5,80) )
+
+        screen.blit(background, (0, 0))
+        pygame.display.flip()
+
+        time.sleep(0.2)
+
 
     def gmeter(self):
         outputs = ['','']
         axes = self.adxl345.getAxes(True)
         y = axes['z']
-        x = axes['y']
+        x = axes['x']
 
 	y = ( y - 0.408 ) / 0.9135
 
@@ -305,13 +324,17 @@ class OBD_Capture():
         background.blit( self._rendertext("LTFT Bank1", str(data['ltft1']), "%", (255,255,255)), (0,144) )
         background.blit( self._rendertext("LTFT Bank2", str(data['ltft2']), "%", (255,255,255)), (160,144) )
         background.blit( self._rendertext("Timing", str(data['timing']), "%", (255,255,255)), (0,192) )
-        background.blit( self._rendertext("Throttle Pos", "{0:.1f}".format(data['tps']), "%", (255,255,255)), (160,192) )
-
+        background.blit( self._rendertext("Throttle Pos", self._floatText(data['tps']), "%", (255,255,255)), (160,192) )
 
         screen.blit(background, (0, 0))
 
-
         pygame.display.flip()
+
+    def _floatText(self, float):
+	if float == "NODATA":
+	    return float
+	else:
+	    return "{0:.1f}".format(float)
 
     def _rendertext(self, name, value, unit, color):
         gauge = pygame.Surface( (160,48) )
@@ -397,7 +420,7 @@ if __name__ == "__main__":
 
     o = OBD_Capture()
     o.connect()
-    time.sleep(3)
+    time.sleep(2)
 
     try:
         if not o.is_connected():
@@ -407,28 +430,32 @@ if __name__ == "__main__":
 	pass
 
 
-    displays = [ o.capture_data, o.dragtime, o.gmeter ]
-
-    curdisplay = 2
+    displays = [ o.capture_data, o.dragtime, o.gmeter, o.biggauge ]
+    curdisplay = 0
 
     try:
         while True:
             bp = '0'
             if bp == '1':
                 curdisplay += 1
-                if curdisplay == len(displays): curdisplay = 0
             if bp == '4':
                 curdisplay -= 1
-                if curdisplay == -1 : curdisplay = len(displays)-1
-            displays[curdisplay]()
 
 	    for event in pygame.event.get():
-        	if event.type == pygame.MOUSEBUTTONDOWN:
-            	    print event.pos
+        	if event.type == pygame.MOUSEBUTTONDOWN:    
+		    print event.pos
+		    if event.pos[0] < 160:
+			curdisplay -= 1
+		    else:
+			curdisplay += 1
+
         	if event.type == pygame.QUIT:
             	    done = True
-
-
+	    #Todo: If greater or less than.. Bobbi fucked it.. 
+	    if curdisplay == len(displays): curdisplay = 0
+	    if curdisplay == -1 : curdisplay = len(displays)-1
+            
+	    displays[curdisplay]()
 
     except KeyboardInterrupt:
         print "Bye.. "
