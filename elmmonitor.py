@@ -53,6 +53,8 @@ class OBD_Capture():
     }
     o2pids = [ _O2B1S1, _O2B1S2, _O2B2S1, _O2B2S2, ]
 
+    scanpids = [ _MAP, _RPM, _SPEED, _TIMING, _IAT, _MAF,  _TPS ]
+
     def __init__(self):
         self.port = None
         localtime = time.localtime(time.time())
@@ -223,6 +225,8 @@ class Gauges(object):
 
         self._hugger = (245, 124, 51)
 
+        self.face = pygame.image.load('gauges/bg.png')
+
     def gtoc(self, gpoint):
         return ( int(  (gpoint[0]/2.0)*100  )+160, int(  (gpoint[1]/2.0)*100  )+120 )
 
@@ -299,25 +303,26 @@ class Gauges(object):
         time.sleep(0.2)
 
     def biggauge(self):
-        (name, value, unit) = self.obd.port.sensor(self.obd._SPEED)
+        (name, value, unit) = self.obd.port.sensor(self.obd.scanpids[1])
 
         background = pygame.Surface(screen.get_size())
         background = background.convert()
-        background.fill((16,16,16))
+        background.blit( self.face, (0,0) )
 
+        smallfont = pygame.font.Font(None,35)
         font = pygame.font.Font(None,60)
 
-        speed = font.render(name.strip(), 1, (255,255,255) )
-	speedrect = speed.get_rect()
-   	speedrect.centerx = screen.get_rect().centerx
-	speedrect.centery = 100
- 
-	background.blit(speed, speedrect)
+        speed = smallfont.render(name.strip(), 1, (255,255,255) )
+        speedrect = speed.get_rect()
+        speedrect.centerx = screen.get_rect().centerx
+        speedrect.centery = 100
+
+        background.blit(speed, speedrect)
 
         svalue = font.render("{0} {1}".format(str(value), unit), 1, (255,255,255) )
-	svaluerect = svalue.get_rect()
-   	svaluerect.centerx = screen.get_rect().centerx
-	svaluerect.centery = 140
+        svaluerect = svalue.get_rect()
+        svaluerect.centerx = screen.get_rect().centerx
+        svaluerect.centery = 150
 
         background.blit( svalue, svaluerect )
 
