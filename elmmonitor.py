@@ -229,7 +229,6 @@ class Gauges(object):
     def o2toc(self, voltage):
         return int( ( 1.275 - voltage ) * (240/1.275) )
 
-
     def o2graph(self):
         (name, value1, unit) = self.obd.port.sensor(self.obd._O2B1S1)
         (name, value2, unit) = self.obd.port.sensor(self.obd._O2B1S2)
@@ -249,7 +248,6 @@ class Gauges(object):
         screen.blit(background, (0, 0))
         pygame.display.flip()
 
-        pygame.image.save(screen, 'o2gauge.jpg')
 
     def gmeter(self):
         outputs = ['','']
@@ -297,7 +295,6 @@ class Gauges(object):
         screen.blit(background, (0, 0))
         pygame.display.flip()
 
-        pygame.image.save(screen, 'gmeter.jpg')
 
         time.sleep(0.2)
 
@@ -309,15 +306,24 @@ class Gauges(object):
         background.fill((16,16,16))
 
         font = pygame.font.Font(None,60)
-        speed = font.render("Speed", 1, (255,255,255) )
+
+        speed = font.render(name.strip(), 1, (255,255,255) )
+	speedrect = speed.get_rect()
+   	speedrect.centerx = screen.get_rect().centerx
+	speedrect.centery = 100
+ 
+	background.blit(speed, speedrect)
+
         svalue = font.render("{0} {1}".format(str(value), unit), 1, (255,255,255) )
-        background.blit( speed, (5,5) )
-        background.blit( svalue, (5,80) )
+	svaluerect = svalue.get_rect()
+   	svaluerect.centerx = screen.get_rect().centerx
+	svaluerect.centery = 140
+
+        background.blit( svalue, svaluerect )
 
         screen.blit(background, (0, 0))
         pygame.display.flip()
 
-        pygame.image.save(screen, 'biggauge.jpg')
 
         time.sleep(0.1)
 
@@ -348,8 +354,6 @@ class Gauges(object):
         screen.blit(background, (0, 0))
 
         pygame.display.flip()
-
-        pygame.image.save(screen, 'maindisplay.jpg')
 
     def dragTime(self):
         outputs = ['', '']
@@ -459,15 +463,10 @@ if __name__ == "__main__":
     mygauges = Gauges(o, myADXL)
 
     displays = [ mygauges.maindisplay, mygauges.dragTime, mygauges.gmeter, mygauges.biggauge, mygauges.o2graph ]
-    curdisplay = 4
+    curdisplay = 3
 
     try:
         while True:
-            bp = '0'
-            if bp == '1':
-                curdisplay += 1
-            if bp == '5':
-                curdisplay -= 1
 
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
