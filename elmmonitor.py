@@ -208,6 +208,8 @@ class Gauges(object):
         self.glist = deque([], 10)
         self.o2b1s1list = deque([], 320)
         self.o2b1s2list = deque([], 320)
+        self.o2b2s1list = deque([], 320)
+        self.o2b2s2list = deque([], 320)
 
         self._hugger = (245, 124, 51)
 
@@ -220,12 +222,26 @@ class Gauges(object):
     def o2toc(self, voltage):
         return int( ( 1.275 - voltage ) * (240/1.275) )
 
+    def nodata2zeros(self, value):
+        if value == "NODATA":
+            return (0,0)
+        return value
+
     def o2graph(self, event=None):
         (name, value1, unit) = self.obd.port.sensor(self.obd._O2B1S1)
         (name, value2, unit) = self.obd.port.sensor(self.obd._O2B1S2)
+        (name, value3, unit) = self.obd.port.sensor(self.obd._O2B2S1)
+        (name, value4, unit) = self.obd.port.sensor(self.obd._O2B2S2)
+
+        value1 = self.nodata2zeros(value1)
+        value2 = self.nodata2zeros(value2)
+        value3 = self.nodata2zeros(value3)
+        value4 = self.nodata2zeros(value4)
 
         self.o2b1s1list.append(self.o2toc(value1[0]))
         self.o2b1s2list.append(self.o2toc(value2[0]))
+        self.o2b2s1list.append(self.o2toc(value3[0]))
+        self.o2b2s2list.append(self.o2toc(value4[0]))
 
         background = pygame.Surface(screen.get_size())
         background = background.convert()
@@ -245,12 +261,18 @@ class Gauges(object):
 
         background.blit( self._renderstring("B1S1: {0:.2f}V".format(value1[0]), self._hugger), (5,5) )
         background.blit( self._renderstring("B1S2: {0:.2f}V".format(value2[0]), (255,0,0)), (5,25) )
+        background.blit( self._renderstring("B2S1: {0:.2f}V".format(value1[0]), (0,0,255)), (165,5) )
+        background.blit( self._renderstring("B2S2: {0:.2f}V".format(value2[0]), (255,0,255)), (165,25) )
 
 
         if len(self.o2b1s1list) > 1:
             pygame.draw.lines(background, self._hugger, False, list(enumerate(self.o2b1s1list)), 2 )
         if len(self.o2b1s2list) > 1:
             pygame.draw.lines(background, (255,0,0), False, list(enumerate(self.o2b1s2list)) , 2 )
+        if len(self.o2b2s1list) > 1:
+            pygame.draw.lines(background, (0,0,255), False, list(enumerate(self.o2b2s1list)) , 2 )
+        if len(self.o2b2s2list) > 1:
+            pygame.draw.lines(background, (255,0,255), False, list(enumerate(self.o2b2s2list)) , 2 )
 
         screen.blit(background, (0, 0))
         pygame.display.flip()
