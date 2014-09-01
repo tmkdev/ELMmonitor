@@ -243,8 +243,8 @@ class Gauges(object):
         pygame.draw.line(background, (128,0,0), (0,lean), (320,lean), 2)
         pygame.draw.line(background, (0,0,128), (0,rich), (320,rich), 2)
 
-        background.blit( self._renderstring("B1S1: {0:.2f}V".format(value1[0]), (255,255,255)), (5,5) )
-        background.blit( self._renderstring("B1S2: {0:.2f}V".format(value2[0]), (255,255,255)), (5,25) )
+        background.blit( self._renderstring("B1S1: {0:.2f}V".format(value1[0]), self._hugger), (5,5) )
+        background.blit( self._renderstring("B1S2: {0:.2f}V".format(value2[0]), (255,0,0)), (5,25) )
 
 
         if len(self.o2b1s1list) > 1:
