@@ -510,7 +510,6 @@ if __name__ == "__main__":
                     if event.type == pygame.QUIT:
                         done = True
 
-                #Todo: If greater or less than.. Bobbi fucked it..
                 curdisplay %= len(displays)
 
             displays[curdisplay](event=gaugeevent)
