@@ -68,8 +68,23 @@ def cpass(code):
 
 def fuel_trim_percent(code):
     code = hex_to_int(code)
-    #return (code - 128.0) * 100.0 / 128
-    return code / 200.0
+
+    return (code - 128.0) * 100.0 / 128
+
+
+def oxygen_sensor(code):
+    if len(code) < 3:
+        code = "{0}0000".format(code)
+
+    volt = code[0:2]
+    trim = code[2:4]
+
+    vcode = hex_to_int(volt)
+    tcode = hex_to_int(trim)
+
+    rval = ( vcode / 200.0, (tcode - 128.0) * 100.0 / 128 )
+
+    return ( vcode / 200.0, (tcode - 128.0) * 100.0 / 128 )
 
 def dtc_decrypt(code):
     #first byte is byte after PID and without spaces
@@ -155,14 +170,14 @@ SENSORS = [
     Sensor("throttle_pos"          , "       Throttle Position", "01111", throttle_pos     ,"%"      ),
     Sensor("secondary_air_status"  , "    Secondary Air Status", "0112", cpass            ,""       ),
     Sensor("o2_sensor_positions"   , "  Location of O2 sensors", "0113", cpass            ,""       ),
-    Sensor("o211"                  , "        O2 Sensor: 1 - 1", "0114", fuel_trim_percent,"%"      ),
-    Sensor("o212"                  , "        O2 Sensor: 1 - 2", "0115", fuel_trim_percent,"%"      ),
-    Sensor("o213"                  , "        O2 Sensor: 1 - 3", "0116", fuel_trim_percent,"%"      ),
-    Sensor("o214"                  , "        O2 Sensor: 1 - 4", "0117", fuel_trim_percent,"%"      ),
-    Sensor("o221"                  , "        O2 Sensor: 2 - 1", "0118", fuel_trim_percent,"%"      ),
-    Sensor("o222"                  , "        O2 Sensor: 2 - 2", "0119", fuel_trim_percent,"%"      ),
-    Sensor("o223"                  , "        O2 Sensor: 2 - 3", "011A", fuel_trim_percent,"%"      ),
-    Sensor("o224"                  , "        O2 Sensor: 2 - 4", "011B", fuel_trim_percent,"%"      ),
+    Sensor("o211"                  , "        O2 Sensor: 1 - 1", "0114", oxygen_sensor    ,"%"      ),
+    Sensor("o212"                  , "        O2 Sensor: 1 - 2", "0115", oxygen_sensor    ,"%"      ),
+    Sensor("o213"                  , "        O2 Sensor: 1 - 3", "0116", oxygen_sensor    ,"%"      ),
+    Sensor("o214"                  , "        O2 Sensor: 1 - 4", "0117", oxygen_sensor    ,"%"      ),
+    Sensor("o221"                  , "        O2 Sensor: 2 - 1", "0118", oxygen_sensor    ,"%"      ),
+    Sensor("o222"                  , "        O2 Sensor: 2 - 2", "0119", oxygen_sensor    ,"%"      ),
+    Sensor("o223"                  , "        O2 Sensor: 2 - 3", "011A", oxygen_sensor    ,"%"      ),
+    Sensor("o224"                  , "        O2 Sensor: 2 - 4", "011B", oxygen_sensor    ,"%"      ),
     Sensor("obd_standard"          , "         OBD Designation", "011C", cpass            ,""       ),
     Sensor("o2_sensor_position_b"  ,"  Location of O2 sensors" , "011D", cpass            ,""       ),
     Sensor("aux_input"             , "        Aux input status", "011E", cpass            ,""       ),

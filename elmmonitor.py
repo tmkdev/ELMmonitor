@@ -53,7 +53,7 @@ class OBD_Capture():
     }
     o2pids = [ _O2B1S1, _O2B1S2, _O2B2S1, _O2B2S2, ]
 
-    scanpids = [ _MAP, _RPM, _SPEED, _TIMING, _IAT, _MAF,  _TPS ]
+    scanpids = [  _SPEED, _RPM, _IAT, _COOLTEMP, _LOAD, _TIMING,  _MAF, _MAP, _TPS ]
 
     def __init__(self):
         self.port = None
@@ -71,7 +71,7 @@ class OBD_Capture():
 
     def connect(self):
         #self.port = obd_io.OBDPort('/dev/pts/{0}'.format(portnumber), None, 2, 2)
-        portnames = ['/dev/obd0', '/dev/obd1', '/dev/pts/2', '/dev/pts/3', '/dev/pts/1', '/dev/pts/9']
+        portnames = ['/dev/obd0', '/dev/obd1', '/dev/pts/2', '/dev/pts/3', '/dev/pts/4', '/dev/pts/1', '/dev/pts/9']
 
 
         for port in portnames:
@@ -91,24 +91,6 @@ class OBD_Capture():
     def is_connected(self):
         return self.port
 
-
-
-    def o2scan(self):
-        outputs = ['', '']
-
-        try:
-            for pid in enumerate(self.o2pids):
-                (name, self.o2vals[pid[0]], unit) = self.port.sensor(pid[1])
-
-            outputs[0] = "1 S1:{0:.1f} S2:{1:.1f}".format(self.o2vals[0], self.o2vals[1])
-            outputs[1] = "2 S1:{0:.1f} S2:{1:.1f}".format(self.o2vals[2], self.o2vals[3])
-
-            time.sleep(0.1)
-            self.renderoutput(outputs, self.lcd._YELLOW)
-
-        except:
-            print "Error in o2scan.."
-            raise
 
     def milage(self):
         outputs = ['', '']
@@ -212,6 +194,9 @@ class OBD_Capture():
             raise
 
 class Gauges(object):
+    UPEVENT = 1
+    DOWNEVENT = 2
+
     def __init__(self, obd, adxl):
         self.obd = obd
         self.adxl345 = adxl
@@ -226,6 +211,7 @@ class Gauges(object):
         self._hugger = (245, 124, 51)
 
         self.face = pygame.image.load('gauges/bg.png')
+        self.scanpidindex = 0
 
     def gtoc(self, gpoint):
         return ( int(  (gpoint[0]/2.0)*100  )+160, int(  (gpoint[1]/2.0)*100  )+120 )
@@ -233,12 +219,12 @@ class Gauges(object):
     def o2toc(self, voltage):
         return int( ( 1.275 - voltage ) * (240/1.275) )
 
-    def o2graph(self):
+    def o2graph(self, event=None):
         (name, value1, unit) = self.obd.port.sensor(self.obd._O2B1S1)
         (name, value2, unit) = self.obd.port.sensor(self.obd._O2B1S2)
 
-        self.o2b1s1list.append(self.o2toc(value1))
-        self.o2b1s2list.append(self.o2toc(value2))
+        self.o2b1s1list.append(self.o2toc(value1[0]))
+        self.o2b1s2list.append(self.o2toc(value2[0]))
 
         background = pygame.Surface(screen.get_size())
         background = background.convert()
@@ -253,7 +239,7 @@ class Gauges(object):
         pygame.display.flip()
 
 
-    def gmeter(self):
+    def gmeter(self, event=None):
         outputs = ['','']
         axes = self.adxl345.getAxes(True)
         y = axes['z']
@@ -272,8 +258,14 @@ class Gauges(object):
         background = background.convert()
         background.fill((0,0,0))
 
-        pygame.draw.circle(background, (255,255,255), (160,120), 50, 1)
-        pygame.draw.circle(background, (128,128,128), (160,120), 100, 1)
+        pygame.draw.circle(background, (255,255,255), (160,120), 50, 3)
+        pygame.draw.circle(background, (128,128,128), (160,120), 12, 1)
+        pygame.draw.circle(background, (128,128,128), (160,120), 25, 1)
+        pygame.draw.circle(background, (128,128,128), (160,120), 38, 1)
+        pygame.draw.circle(background, (64,64,64), (160,120), 62, 1)
+        pygame.draw.circle(background, (64,64,64), (160,120), 75, 1)
+        pygame.draw.circle(background, (64,64,64), (160,120), 88, 1)
+        pygame.draw.circle(background, self._hugger, (160,120), 100, 2)
 
         pygame.draw.circle(background, (255,255,0), (int(self.gs['minx']/2.0*100)+160, 120), 3)
         pygame.draw.circle(background, (255,255,0), (int(self.gs['maxx']/2.0*100)+160, 120), 3)
@@ -302,8 +294,18 @@ class Gauges(object):
 
         time.sleep(0.2)
 
-    def biggauge(self):
-        (name, value, unit) = self.obd.port.sensor(self.obd.scanpids[1])
+    def biggauge(self, event=None):
+        if event == self.UPEVENT:
+            self.scanpidindex += 1
+        if event == self.DOWNEVENT:
+            self.scanpidindex -= 1
+
+        if self.scanpidindex >= len(self.obd.scanpids):
+            self.scanpidindex = 0
+        if self.scanpidindex < 0:
+            self.scanpidindex = len(self.obd.scanpids)-1
+
+        (name, value, unit) = self.obd.port.sensor(self.obd.scanpids[self.scanpidindex])
 
         background = pygame.Surface(screen.get_size())
         background = background.convert()
@@ -319,7 +321,11 @@ class Gauges(object):
 
         background.blit(speed, speedrect)
 
-        svalue = font.render("{0} {1}".format(str(value), unit), 1, (255,255,255) )
+        if value == "NODATA":
+            svalue = font.render("NO DATA", 1, (255,255,255) )
+        else:
+            svalue = font.render("{0:.0f} {1}".format(value, unit), 1, (255,255,255) )
+
         svaluerect = svalue.get_rect()
         svaluerect.centerx = screen.get_rect().centerx
         svaluerect.centery = 150
@@ -332,7 +338,7 @@ class Gauges(object):
 
         time.sleep(0.1)
 
-    def maindisplay(self):
+    def maindisplay(self, event=None):
         vals = self.obd.capture_data()
 
         self.renderpygame(vals)
@@ -349,10 +355,10 @@ class Gauges(object):
         background.blit( self._rendertext("Tach", str(data['rpm']), "RPM", (255,102,0) if data['rpm'] > 5000 else (255,255,255)), (160,0) )
         background.blit( self._rendertext("Coolant", str(data['coolant']), "C", (255,255,255)), (10,48) )
         background.blit( self._rendertext("Intake Air Temp", str(data['intakeair']), "C", (255,255,255)), (160,48) )
-        background.blit( self._rendertext("STFT Bank1", str(data['stft1']), "%", (255,255,255)), (10,96) )
-        background.blit( self._rendertext("STFT Bank2", str(data['stft2']), "%", (255,255,255)), (160,96) )
-        background.blit( self._rendertext("LTFT Bank1", str(data['ltft1']), "%", (255,255,255)), (10,144) )
-        background.blit( self._rendertext("LTFT Bank2", str(data['ltft2']), "%", (255,255,255)), (160,144) )
+        background.blit( self._rendertext("STFT Bank1", "{:.1f}".format(data['stft1']), "%", (255,255,255)), (10,96) )
+        background.blit( self._rendertext("STFT Bank2", "{:.1f}".format(data['stft2']), "%", (255,255,255)), (160,96) )
+        background.blit( self._rendertext("LTFT Bank1", "{:.1f}".format(data['ltft1']), "%", (255,255,255)), (10,144) )
+        background.blit( self._rendertext("LTFT Bank2", "{:.1f}".format(data['ltft2']), "%", (255,255,255)), (160,144) )
         background.blit( self._rendertext("Timing", str(data['timing']), "%", (255,255,255)), (10,192) )
         background.blit( self._rendertext("Throttle Pos", self._floatText(data['tps']), "%", (255,255,255)), (160,192) )
 
@@ -360,14 +366,14 @@ class Gauges(object):
 
         pygame.display.flip()
 
-    def dragTime(self):
+    def dragTime(self, event):
         outputs = ['', '']
 
         try:
             (name, value, unit) = self.obd.port.sensor(self.obd._SPEED)
             if value == 0:
                 self.startTime = time.time()
-                outputs[0] = "Ready for timing"
+                outputs[0] = "Ready!"
             if value > 0 and value < 96 and self.startTime > 0:
                 outputs[0]="ET: {0:.1f}s".format(time.time() - self.startTime, value)
 
@@ -385,9 +391,9 @@ class Gauges(object):
             background.fill((0,0,0))
 
 
-            background.blit( self._rendertext(name.strip(), str(value), unit, (255,255,255)), (10,0) )
-            background.blit( self._rendertext("Message", outputs[0], "", (255,255,255)), (10,48) )
-            background.blit( self._rendertext("Last ET", outputs[1], "S", (255,255,255)), (160,48) )
+            background.blit( self._rendertext(name.strip(), str(value), unit, (255,255,255)), (10,48) )
+            background.blit( self._rendertext("Message", outputs[0], "", (255,255,255)), (10,96) )
+            background.blit( self._rendertext("Last ET", outputs[1], "S", (255,255,255)), (160,96) )
 
             screen.blit(background, (0, 0))
             pygame.display.flip()
@@ -472,14 +478,20 @@ if __name__ == "__main__":
 
     try:
         while True:
+            gaugeevent = None
 
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     print event.pos
-                    if event.pos[0] < 160:
+                    if event.pos[0] < 110:
                         curdisplay -= 1
-                    else:
+                    elif event.pos[0] > 210:
                         curdisplay += 1
+                    else:
+                        if event.pos[1] < 160:
+                            gaugeevent = Gauges.UPEVENT
+                        else:
+                            gaugeevent = Gauges.DOWNEVENT
 
                     if event.type == pygame.QUIT:
                         done = True
@@ -488,7 +500,7 @@ if __name__ == "__main__":
                 if curdisplay >= len(displays): curdisplay = 0
                 if curdisplay < 0 : curdisplay = len(displays)-1
 
-            displays[curdisplay]()
+            displays[curdisplay](event=gaugeevent)
 
     except KeyboardInterrupt:
         print "Bye.. "
