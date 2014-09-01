@@ -46,6 +46,10 @@ def speed(code):
     code = hex_to_int(code)
     return code
 
+def speed_mph(code):
+    code = int( hex_to_int(code) * 0.621371 )
+    return code
+
 def percent_scale(code):
     code = hex_to_int(code)
     return code * 100.0 / 255.0
@@ -183,6 +187,7 @@ SENSORS = [
     Sensor("aux_input"             , "        Aux input status", "011E", cpass            ,""       ),
     Sensor("engine_time"           , " Time Since Engine Start", "011F", sec_to_min       ,"min"    ),
     Sensor("engine_mil_time"       , "  Engine Run with MIL on", "014D", sec_to_min       ,"min"    ),
+    Sensor("speed_mph"             , "           Vehicle Speed", "010D1", speed_mph        ,"MPH"    ),
     ]
      
     

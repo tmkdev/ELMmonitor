@@ -33,6 +33,7 @@ class OBD_Capture():
     _O2B1S2=21
     _O2B2S1=24
     _O2B2S2=25
+    _SPEEDMPH=33
 
     pidlist={ 'high': [    ("load", _LOAD),
                            ("rpm", _RPM),
@@ -53,7 +54,7 @@ class OBD_Capture():
     }
     o2pids = [ _O2B1S1, _O2B1S2, _O2B2S1, _O2B2S2, ]
 
-    scanpids = [  _SPEED, _RPM, _IAT, _COOLTEMP, _LOAD, _TIMING,  _MAF, _MAP, _TPS ]
+    scanpids = [  _SPEED, _SPEEDMPH, _RPM, _IAT, _COOLTEMP, _LOAD, _TIMING,  _MAF, _MAP, _TPS ]
 
     def __init__(self):
         self.port = None
@@ -242,8 +243,8 @@ class Gauges(object):
         pygame.draw.line(background, (128,0,0), (0,lean), (320,lean), 2)
         pygame.draw.line(background, (0,0,128), (0,rich), (320,rich), 2)
 
-        background.blit( self._renderstring("B1S1: {0:.2f}".format(value1[0]), (255,255,255)), (5,5) )
-        background.blit( self._renderstring("B1S2: {0:.2f}".format(value2[0]), (255,255,255)), (5,25) )
+        background.blit( self._renderstring("B1S1: {0:.2f}V".format(value1[0]), (255,255,255)), (5,5) )
+        background.blit( self._renderstring("B1S2: {0:.2f}V".format(value2[0]), (255,255,255)), (5,25) )
 
 
         if len(self.o2b1s1list) > 1:
