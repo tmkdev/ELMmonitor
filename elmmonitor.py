@@ -230,10 +230,26 @@ class Gauges(object):
         background = background.convert()
         background.fill((0,0,0))
 
+        rich = self.o2toc(0.8)
+        mid = self.o2toc(0.5)
+        lean = self.o2toc(0.2)
+
+        background.blit( self._renderstring("0.8V", (0,0,128)), (5,rich-20) )
+        background.blit( self._renderstring("0.5V", (128,128,128)), (5,mid-20) )
+        background.blit( self._renderstring("0.2V", (128,0,0)), (5,lean-20) )
+
+        pygame.draw.line(background, (128,128,128), (0,mid), (320,mid), 2)
+        pygame.draw.line(background, (128,0,0), (0,lean), (320,lean), 2)
+        pygame.draw.line(background, (0,0,128), (0,rich), (320,rich), 2)
+
+        background.blit( self._renderstring("B1S1: {0:.2f}".format(value1[0]), (255,255,255)), (5,5) )
+        background.blit( self._renderstring("B1S2: {0:.2f}".format(value2[0]), (255,255,255)), (5,25) )
+
+
         if len(self.o2b1s1list) > 1:
-            pygame.draw.lines(background, self._hugger, False, list(enumerate(self.o2b1s1list)) )
+            pygame.draw.lines(background, self._hugger, False, list(enumerate(self.o2b1s1list)), 2 )
         if len(self.o2b1s2list) > 1:
-            pygame.draw.lines(background, (255,0,0), False, list(enumerate(self.o2b1s2list)) )
+            pygame.draw.lines(background, (255,0,0), False, list(enumerate(self.o2b1s2list)) , 2 )
 
         screen.blit(background, (0, 0))
         pygame.display.flip()
@@ -300,10 +316,7 @@ class Gauges(object):
         if event == self.DOWNEVENT:
             self.scanpidindex -= 1
 
-        if self.scanpidindex >= len(self.obd.scanpids):
-            self.scanpidindex = 0
-        if self.scanpidindex < 0:
-            self.scanpidindex = len(self.obd.scanpids)-1
+        self.scanpidindex %= len(self.obd.scanpids)
 
         (name, value, unit) = self.obd.port.sensor(self.obd.scanpids[self.scanpidindex])
 
@@ -497,8 +510,7 @@ if __name__ == "__main__":
                         done = True
 
                 #Todo: If greater or less than.. Bobbi fucked it..
-                if curdisplay >= len(displays): curdisplay = 0
-                if curdisplay < 0 : curdisplay = len(displays)-1
+                curdisplay %= len(displays)
 
             displays[curdisplay](event=gaugeevent)
 
