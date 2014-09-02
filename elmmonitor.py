@@ -216,6 +216,8 @@ class Gauges(object):
         self.face = pygame.image.load('gauges/bg.png')
         self.scanpidindex = 0
 
+
+
     def gtoc(self, gpoint):
         return ( int(  (gpoint[0]/2.0)*100  )+160, int(  (gpoint[1]/2.0)*100  )+120 )
 
@@ -374,6 +376,48 @@ class Gauges(object):
 
         time.sleep(0.1)
 
+    def milage(self, event=None):
+        (name, speed, unit) = self.obd.port.sensor(self.obd._SPEED)
+        (name, maf, unit) = self.obd.port.sensor(self.obd._MAF)
+
+        if speed != "NODATA" and maf != "NODATA":
+            speedmiles = int(speed * 0.621371)
+            mpg = int(7.107 * speed / maf)
+        else:
+            speedmiles = "NODATA"
+            mpg = "NODATA"
+
+        background = pygame.Surface(screen.get_size())
+        background = background.convert()
+        background.blit( self.face, (0,0) )
+
+        font = pygame.font.Font(None,60)
+
+        speed = font.render("{0}mph".format(speedmiles), 1, (255,255,255) )
+        speedrect = speed.get_rect()
+        speedrect.centerx = screen.get_rect().centerx
+        speedrect.centery = 90
+
+        background.blit(speed, speedrect)
+
+        if mpg < 15:
+            color = (255,64,64)
+        else:
+            color = (64,255,64)
+
+        svalue = font.render("{0}mpg".format(mpg), 1, color )
+        svaluerect = svalue.get_rect()
+        svaluerect.centerx = screen.get_rect().centerx
+        svaluerect.centery = 150
+
+        background.blit( svalue, svaluerect )
+
+        screen.blit(background, (0, 0))
+        pygame.display.flip()
+
+
+        time.sleep(0.1)
+
     def maindisplay(self, event=None):
         vals = self.obd.capture_data()
 
@@ -509,7 +553,7 @@ if __name__ == "__main__":
 
     mygauges = Gauges(o, myADXL)
 
-    displays = [ mygauges.maindisplay, mygauges.dragTime, mygauges.gmeter, mygauges.biggauge, mygauges.o2graph ]
+    displays = [ mygauges.maindisplay, mygauges.dragTime, mygauges.gmeter, mygauges.biggauge, mygauges.o2graph, mygauges.milage ]
     curdisplay = 3
 
     try:
