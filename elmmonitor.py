@@ -251,7 +251,7 @@ class Gauges(object):
 
         rich = self.o2toc(0.8)
         mid = self.o2toc(0.5)
-        lean = self.o2toc(0.2)
+        lean = self.o2toc(0.1)
 
         background.blit( self._renderstring("0.8V", (0,0,128)), (5,rich-20) )
         background.blit( self._renderstring("0.5V", (128,128,128)), (5,mid-20) )
