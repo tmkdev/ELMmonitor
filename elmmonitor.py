@@ -250,12 +250,12 @@ class Gauges(object):
         background.fill((0,0,0))
 
         rich = self.o2toc(0.8)
-        mid = self.o2toc(0.5)
+        mid = self.o2toc(0.45)
         lean = self.o2toc(0.1)
 
         background.blit( self._renderstring("0.8V", (0,0,128)), (5,rich-20) )
-        background.blit( self._renderstring("0.5V", (128,128,128)), (5,mid-20) )
-        background.blit( self._renderstring("0.2V", (128,0,0)), (5,lean-20) )
+        background.blit( self._renderstring("0.45V", (128,128,128)), (5,mid-20) )
+        background.blit( self._renderstring("0.1V", (128,0,0)), (5,lean-20) )
 
         pygame.draw.line(background, (128,128,128), (0,mid), (320,mid), 2)
         pygame.draw.line(background, (128,0,0), (0,lean), (320,lean), 2)
