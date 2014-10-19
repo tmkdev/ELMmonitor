@@ -380,7 +380,7 @@ class Gauges(object):
         (name, speed, unit) = self.obd.port.sensor(self.obd._SPEED)
         (name, maf, unit) = self.obd.port.sensor(self.obd._MAF)
 
-        if speed != "NODATA" and maf != "NODATA":
+        if speed != "NODATA" and maf != "NODATA" and maf > 0:
             speedmiles = int(speed * 0.621371)
             mpg = int(7.107 * speed / maf)
         else:
