@@ -263,8 +263,8 @@ class Gauges(object):
 
         background.blit( self._renderstring("B1S1: {0:.2f}V".format(value1[0]), self._hugger), (5,5) )
         background.blit( self._renderstring("B1S2: {0:.2f}V".format(value2[0]), (255,0,0)), (5,25) )
-        background.blit( self._renderstring("B2S1: {0:.2f}V".format(value1[0]), (0,0,255)), (165,5) )
-        background.blit( self._renderstring("B2S2: {0:.2f}V".format(value2[0]), (255,0,255)), (165,25) )
+        background.blit( self._renderstring("B2S1: {0:.2f}V".format(value3[0]), (0,0,255)), (165,5) )
+        background.blit( self._renderstring("B2S2: {0:.2f}V".format(value4[0]), (255,0,255)), (165,25) )
 
 
         if len(self.o2b1s1list) > 1:
@@ -396,7 +396,7 @@ class Gauges(object):
         speed = font.render("{0}mph".format(speedmiles), 1, (255,255,255) )
         speedrect = speed.get_rect()
         speedrect.centerx = screen.get_rect().centerx
-        speedrect.centery = 90
+        speedrect.centery = 60
 
         background.blit(speed, speedrect)
 
@@ -408,9 +408,17 @@ class Gauges(object):
         svalue = font.render("{0}mpg".format(mpg), 1, color )
         svaluerect = svalue.get_rect()
         svaluerect.centerx = screen.get_rect().centerx
-        svaluerect.centery = 150
+        svaluerect.centery = 120
 
         background.blit( svalue, svaluerect )
+
+        svalue = font.render("{0}mpg".format(mpg), 1, color )
+        svaluerect = svalue.get_rect()
+        svaluerect.centerx = screen.get_rect().centerx
+        svaluerect.centery = 170
+
+        background.blit( svalue, svaluerect )
+
 
         screen.blit(background, (0, 0))
         pygame.display.flip()
@@ -435,11 +443,11 @@ class Gauges(object):
         background.blit( self._rendertext("Tach", str(data['rpm']), "RPM", (255,102,0) if data['rpm'] > 5000 else (255,255,255)), (160,0) )
         background.blit( self._rendertext("Coolant", str(data['coolant']), "C", (255,255,255)), (10,48) )
         background.blit( self._rendertext("Intake Air Temp", str(data['intakeair']), "C", (255,255,255)), (160,48) )
-        background.blit( self._rendertext("STFT Bank1", "{:.1f}".format(data['stft1']), "%", (255,255,255)), (10,96) )
-        background.blit( self._rendertext("STFT Bank2", "{:.1f}".format(data['stft2']), "%", (255,255,255)), (160,96) )
-        background.blit( self._rendertext("LTFT Bank1", "{:.1f}".format(data['ltft1']), "%", (255,255,255)), (10,144) )
-        background.blit( self._rendertext("LTFT Bank2", "{:.1f}".format(data['ltft2']), "%", (255,255,255)), (160,144) )
-        background.blit( self._rendertext("Timing", str(data['timing']), "%", (255,255,255)), (10,192) )
+        background.blit( self._rendertext("STFT Bank1", "{:.1f}".format( self.nodata2zeros( data['stft1'] ) ), "%", (255,255,255)), (10,96) )
+        background.blit( self._rendertext("STFT Bank2", "{:.1f}".format( self.nodata2zeros( data['stft2'] ) ), "%", (255,255,255)), (160,96) )
+        background.blit( self._rendertext("LTFT Bank1", "{:.1f}".format( self.nodata2zeros( data['ltft1'] ) ), "%", (255,255,255)), (10,144) )
+        background.blit( self._rendertext("LTFT Bank2", "{:.1f}".format( self.nodata2zeros( data['ltft2'] ) ), "%", (255,255,255)), (160,144) )
+        background.blit( self._rendertext("Timing", str(data['timing']), "Deg", (255,255,255)), (10,192) )
         background.blit( self._rendertext("Throttle Pos", self._floatText(data['tps']), "%", (255,255,255)), (160,192) )
 
         screen.blit(background, (0, 0))
